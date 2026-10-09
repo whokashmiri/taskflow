@@ -2,6 +2,7 @@ package com.taskflow.service.user;
 
 import com.taskflow.dto.auth.RegisterRequest;
 import com.taskflow.dto.auth.RegisterResponse;
+import com.taskflow.exception.auth.EmailAlreadyExistException;
 import com.taskflow.model.user.User;
 import com.taskflow.repository.user.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,7 +26,7 @@ public class UserService {
      Optional<User> existingUser =    userRepository.findByEmail(registerRequest.getEmail());
 
      if (existingUser.isPresent()){
-         throw new RuntimeException("User already registers");
+         throw new EmailAlreadyExistException("User already registers");
      }
 
      User user = new User();
