@@ -1,8 +1,10 @@
 package com.taskflow.service.user;
 
+import com.taskflow.dto.auth.LoginRequest;
 import com.taskflow.dto.auth.RegisterRequest;
 import com.taskflow.dto.auth.RegisterResponse;
 import com.taskflow.exception.auth.EmailAlreadyExistException;
+import com.taskflow.exception.auth.InvalidCredentialsException;
 import com.taskflow.model.user.User;
 import com.taskflow.repository.user.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -17,37 +19,52 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository , PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
-    public RegisterResponse register (RegisterRequest registerRequest ) {
-     Optional<User> existingUser =    userRepository.findByEmail(registerRequest.getEmail());
+    public RegisterResponse register(RegisterRequest registerRequest) {
+        Optional<User> existingUser = userRepository.findByEmail(registerRequest.getEmail());
 
-     if (existingUser.isPresent()){
-         throw new EmailAlreadyExistException("User already registers");
-     }
+        if (existingUser.isPresent()) {
+            throw new EmailAlreadyExistException("User already registered");
+        }
 
-     User user = new User();
+        User user = new User();
 
-     user.setName(registerRequest.getName());
-     user.setEmail(registerRequest.getEmail());
-      String hashedPassword = passwordEncoder.encode(registerRequest.getPassword());
-      user.setPassword(hashedPassword);
+        user.setName(registerRequest.getName());
+        user.setEmail(registerRequest.getEmail());
+        String hashedPassword = passwordEncoder.encode(registerRequest.getPassword());
+        user.setPassword(hashedPassword);
 
-      LocalDateTime now = LocalDateTime.now();
-      user.setCreatedAt(now);
+        LocalDateTime now = LocalDateTime.now();
+        user.setCreatedAt(now);
         user.setUpdatedAt(now);
-        User saved  = userRepository.save(user);
+        User saved = userRepository.save(user);
 
 
-
-        return  new RegisterResponse(saved.getId() , saved.getName(), saved.getEmail(), saved.getCreatedAt() );
+        return new RegisterResponse(saved.getId(), saved.getName(), saved.getEmail(), saved.getCreatedAt());
     }
 
-    public Optional<User> findByEmail(String email) {
-        Optional<User> user = userRepository.findByEmail(email);
-        return user;
+    public User login(LoginRequest loginRequest) {
+
+        Optional<User> user =
+                userRepository.findByEmail(loginRequest.getEmail());
+
+        String rawPassword = loginRequest.getPassword();
+
+        if (user.isEmpty()) {
+            throw new InvalidCredentialsException("Invalid phone or Password");
+        }
+        if(!passwordEncoder.matches(rawPassword , user.get().getPassword())) {
+            throw new InvalidCredentialsException("Invalid phone or Password");
+        }
+
+
+        return user.get();
     }
+
+
+
 }

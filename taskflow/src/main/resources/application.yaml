@@ -2,6 +2,9 @@ spring:
   application:
     name: taskflow
 
+  jwt:
+    secret: ${JWT_SECRET}
+
   datasource:
     url: jdbc:postgresql://localhost:5432/taskflow
     username: taskflow
@@ -12,3 +15,7 @@ spring:
       ddl-auto: update
 
     show-sql: true
+
+  logging:
+    level:
+      org.springframework.security: DEBUG

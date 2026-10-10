@@ -1,6 +1,7 @@
 package com.taskflow.exception;
 
 import com.taskflow.exception.auth.EmailAlreadyExistException;
+import com.taskflow.exception.auth.InvalidCredentialsException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -11,5 +12,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(EmailAlreadyExistException.class)
     public ResponseEntity<String> handleEmailAlreadyExistException(EmailAlreadyExistException emailAlreadyExistException){
         return ResponseEntity.status(HttpStatus.CONFLICT).body(emailAlreadyExistException.getMessage());
+    }
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<String> handleInvalidCredentialsException(InvalidCredentialsException invalidCredentialsException){
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(invalidCredentialsException.getMessage());
     }
 }
