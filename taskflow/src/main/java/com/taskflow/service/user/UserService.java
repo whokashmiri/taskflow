@@ -1,6 +1,7 @@
 package com.taskflow.service.user;
 
 import com.taskflow.dto.auth.LoginRequest;
+import com.taskflow.dto.auth.LoginResponse;
 import com.taskflow.dto.auth.RegisterRequest;
 import com.taskflow.dto.auth.RegisterResponse;
 import com.taskflow.exception.auth.EmailAlreadyExistException;
@@ -52,17 +53,23 @@ public class UserService {
         Optional<User> user =
                 userRepository.findByEmail(loginRequest.getEmail());
 
+        if (user.isEmpty()) {
+            throw new InvalidCredentialsException(
+                    "Invalid email or password");
+        }
+
+        User existingUser = user.get();
+
         String rawPassword = loginRequest.getPassword();
 
-        if (user.isEmpty()) {
-            throw new InvalidCredentialsException("Invalid phone or Password");
-        }
-        if(!passwordEncoder.matches(rawPassword , user.get().getPassword())) {
-            throw new InvalidCredentialsException("Invalid phone or Password");
+        if (!passwordEncoder.matches(
+                rawPassword,
+                existingUser.getPassword())) {
+            throw new InvalidCredentialsException(
+                    "Invalid email or password");
         }
 
-
-        return user.get();
+        return existingUser;
     }
 
 

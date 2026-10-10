@@ -1,6 +1,7 @@
 package com.taskflow.controller.auth;
 
 import com.taskflow.dto.auth.LoginRequest;
+import com.taskflow.dto.auth.LoginResponse;
 import com.taskflow.dto.auth.RegisterRequest;
 import com.taskflow.dto.auth.RegisterResponse;
 import com.taskflow.model.user.User;
@@ -34,11 +35,22 @@ public class AuthController {
                 .status(HttpStatus.CREATED)
                 .body(response);
     }
-
     @PostMapping("/login")
-    public ResponseEntity<String> login(@Valid @RequestBody LoginRequest loginRequest){
-       User user = userService.login(loginRequest);
-       String token = jwtService.generateToken(user);
-       return ResponseEntity.ok(token);
+    public ResponseEntity<LoginResponse> login(
+            @Valid @RequestBody LoginRequest loginRequest) {
+
+        User user = userService.login(loginRequest);
+
+        String token = jwtService.generateToken(user);
+
+        LoginResponse loginResponse = new LoginResponse(
+                token,
+                "Bearer",
+                user.getId(),
+                user.getName(),
+                user.getEmail()
+        );
+
+        return ResponseEntity.ok(loginResponse);
     }
 }

@@ -13,11 +13,13 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    @Value("$(spring.jwt.secret)")
+    @Value("${spring.jwt.secret}")
     private String secret;
+
 
     public String generateToken(User user){
         SecretKey key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+
         return Jwts.builder()
                 .subject(String.valueOf(user.getId()))
                 .issuedAt(new Date())
