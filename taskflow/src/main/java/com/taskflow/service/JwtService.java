@@ -13,7 +13,7 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    @Value("${spring.jwt.secret}")
+    @Value("${app.jwt.secret}")
     private String secret;
 
 

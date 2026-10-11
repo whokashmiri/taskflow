@@ -1,3 +1,4 @@
+
 package com.taskflow.config;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -13,12 +14,11 @@ import java.util.List;
 @Configuration
 public class CorsConfig {
 
-    @Value("${app.cors.allowed-origins:http:localhost:4200}")
+    @Value("${app.cors.allowed-origins:http://localhost:4200}")
     private String allowedOrigins;
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource(){
-
+    public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
 
         corsConfiguration.setAllowedOrigins(
@@ -26,19 +26,23 @@ public class CorsConfig {
                         .map(String::trim)
                         .filter(origin -> !origin.isEmpty())
                         .toList()
-
         );
-        corsConfiguration.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
 
-        corsConfiguration.setAllowedHeaders(List.of("Authorization","Content-Type","Accept","Origin"));
+        corsConfiguration.setAllowedMethods(
+                List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+        );
+
+        corsConfiguration.setAllowedHeaders(
+                List.of("Authorization", "Content-Type", "Accept", "Origin")
+        );
 
         corsConfiguration.setAllowCredentials(false);
-
         corsConfiguration.setMaxAge(3600L);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
 
-        source.registerCorsConfiguration("*/**", corsConfiguration);
+        source.registerCorsConfiguration("/**", corsConfiguration);
 
         return source;
     }
