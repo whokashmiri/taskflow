@@ -5,6 +5,7 @@ spring:
   jwt:
     secret: ${SECRET:my-super-secret-key-for-taskflow-management-jwt-2026}
 
+
   datasource:
     url: jdbc:postgresql://localhost:5432/taskflow
     username: taskflow
@@ -15,6 +16,12 @@ spring:
       ddl-auto: update
 
     show-sql: true
+
+  app:
+    cors:
+      allowed-origins:${CORS_ALLOWED_ORIGINS:http://localhost:4200}
+
+
 
   logging:
     level:
