@@ -24,10 +24,10 @@ public class OrganisationService {
 
     public OrganisationResponse createOrganisation(OrganisationRequest organisationRequest){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication ==  null || !(authentication.getPrincipal() instanceof User)){
+        if (authentication ==  null || !(authentication.getPrincipal() instanceof String userId )){
             throw new UserNotAuthenticatedException("User not authenticated");
         }
-      UUID ownerId =  UUID.fromString(authentication.getName());
+      UUID ownerId =  UUID.fromString(userId);
 
         String name = organisationRequest.getName().trim();
         if (name.isEmpty()){

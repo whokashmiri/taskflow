@@ -1,3 +1,4 @@
+
 import { Routes } from '@angular/router';
 
 export const routes: Routes = [
@@ -26,6 +27,13 @@ export const routes: Routes = [
       import('./features/dashboard/dashboard').then(
         (m) => m.Dashboard,
       ),
+  },
+  {
+    path: 'organisations/create',
+    loadComponent: () =>
+      import(
+        './features/organisation/pages/create-organisation/create-organisation'
+      ).then((m) => m.CreateOrganisation),
   },
   {
     path: '**',

@@ -34,6 +34,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
+        System.out.println("Request URI: " + request.getRequestURI());
+        System.out.println("Authorization header present: " + (authHeader != null));
         // No Bearer token: continue through the filter chain.
         // Spring Security will decide whether authentication is required.
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -46,6 +48,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             // Validate the token and extract the user ID from its subject.
             String userId = jwtService.extractUserId(token);
+            System.out.println("JWT accepted. User ID: " + userId);
 
             // Don't replace an existing authentication.
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -59,6 +62,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 SecurityContextHolder.getContext()
                         .setAuthentication(authentication);
+
+                System.out.println(
+                        "SecurityContext authenticated: " +
+                                SecurityContextHolder.getContext()
+                                        .getAuthentication()
+                                        .isAuthenticated()
+                );
             }
 
         } catch (JwtException | IllegalArgumentException exception) {
