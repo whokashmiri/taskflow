@@ -142,4 +142,43 @@ public class ProjectService {
                 project.getUpdatedAt()
         );
     }
+
+    @Transactional(readOnly = true)
+    public List<ProjectResponse> getProjectsByOrganisation(UUID organisationId) {
+
+        // 1. Identify the authenticated user.
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null
+                || !authentication.isAuthenticated()
+                || !(authentication.getPrincipal() instanceof String userId)) {
+            throw new UserNotAuthenticatedException("User not authenticated");
+        }
+
+        UUID currentUserId = UUID.fromString(userId);
+
+        // 2. Verify that the organisation exists.
+        Organisation organisation = organisationRepository
+                .findById(organisationId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Organisation not found"));
+
+        // 3. Find the user's active project memberships.
+        List<ProjectMember> memberships =
+                projectMemberRepository.findAllByUserIdAndStatus(
+                        currentUserId,
+                        MembershipStatus.ACTIVE
+                );
+
+        // 4. Return only projects belonging to the selected organisation.
+        return memberships.stream()
+                .map(ProjectMember::getProject)
+                .filter(project ->
+                        project.getOrganisation().getId()
+                                .equals(organisation.getId()))
+                .distinct()
+                .map(this::toProjectResponse)
+                .toList();
+    }
 }

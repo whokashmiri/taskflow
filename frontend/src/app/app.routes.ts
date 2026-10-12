@@ -29,13 +29,6 @@ export const routes: Routes = [
       ),
   },
   {
-    path: 'organisations/create',
-    loadComponent: () =>
-      import(
-        './features/organisation/pages/create-organisation/create-organisation'
-      ).then((m) => m.CreateOrganisation),
-  },
-  {
     path: '**',
     redirectTo: 'login',
   },
