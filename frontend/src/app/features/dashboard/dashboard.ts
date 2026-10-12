@@ -1,73 +1,105 @@
-import { Component, inject } from '@angular/core';
-import { Router } from '@angular/router';
 
-import { AuthService } from '../../core/services/auth.service';
-
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { OrganisationService } from '../../core/services/organisation.service';
+import { OrganisationResponse } from '../organisation/models/organisation-model';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  template: `
-    <div class="min-h-screen bg-slate-950 text-white">
-      <header class="border-b border-slate-800">
-        <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-          <div class="flex items-center gap-3">
-            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-400 font-black text-slate-950">
-              T
-            </div>
-            <span class="text-xl font-bold">TaskFlow</span>
-          </div>
-
-          <button
-            type="button"
-            (click)="logout()"
-            class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium transition hover:bg-slate-800"
-          >
-            Sign out
-          </button>
-        </div>
-      </header>
-
-      <main class="mx-auto max-w-6xl px-6 py-12">
-        <p class="text-sm font-semibold uppercase tracking-widest text-emerald-400">
-          Your workspace
-        </p>
-
-        <h1 class="mt-3 text-4xl font-bold tracking-tight">
-          Welcome to TaskFlow
-        </h1>
-
-        <p class="mt-4 max-w-xl leading-7 text-slate-400">
-          Your account is connected. Next, we'll build organisations,
-          invite members and manage projects and tasks.
-        </p>
-
-        <div class="mt-10 grid gap-5 sm:grid-cols-3">
-          <div class="rounded-xl border border-slate-800 bg-slate-900 p-6">
-            <p class="text-sm text-slate-400">Organisations</p>
-            <p class="mt-3 text-xl font-semibold">Coming next</p>
-          </div>
-
-          <div class="rounded-xl border border-slate-800 bg-slate-900 p-6">
-            <p class="text-sm text-slate-400">Projects</p>
-            <p class="mt-3 text-xl font-semibold">Coming soon</p>
-          </div>
-
-          <div class="rounded-xl border border-slate-800 bg-slate-900 p-6">
-            <p class="text-sm text-slate-400">Tasks</p>
-            <p class="mt-3 text-xl font-semibold">Coming soon</p>
-          </div>
-        </div>
-      </main>
-    </div>
-  `,
+  imports: [FormsModule],
+  templateUrl: './dashboard.html',
 })
-export class Dashboard {
-  private readonly authService = inject(AuthService);
-  private readonly router = inject(Router);
+export class Dashboard implements OnInit {
+  private readonly organisationService = inject(OrganisationService);
 
-  logout(): void {
-    this.authService.logout();
-    void this.router.navigate(['/login']);
+  organisations = signal<OrganisationResponse[]>([]);
+  isLoading = signal(true);
+  isSubmitting = signal(false);
+  isCreateModalOpen = signal(false);
+
+  name = '';
+  errorMessage = signal('');
+  successMessage = signal('');
+
+  ngOnInit(): void {
+    this.loadOrganisations();
+  }
+
+  loadOrganisations(): void {
+    this.isLoading.set(true);
+    this.errorMessage.set('');
+
+    this.organisationService.getOrganisation().subscribe({
+      next: (response) => {
+        console.log('Organisations received:', response);
+
+        this.organisations.set(response);
+        this.isLoading.set(false);
+
+        console.log('isLoading after success:', this.isLoading());
+      },
+      error: (error) => {
+        console.error('Failed to load organisations:', error);
+
+        this.errorMessage.set(
+          error.error?.message || 'Failed to load organisations',
+        );
+
+        this.isLoading.set(false);
+
+        console.log('isLoading after error:', this.isLoading());
+      },
+    });
+  }
+
+
+  openCreateModal(): void {
+    this.name = '';
+    this.errorMessage.set('');
+    this.isCreateModalOpen.set(true);
+  }
+
+  closeCreateModal(): void {
+    if (this.isSubmitting()) {
+      return;
+    }
+
+    this.isCreateModalOpen.set(false);
+  }
+
+  createOrganisation(): void {
+    const organisationName = this.name.trim();
+
+    if (organisationName.length < 2) {
+      this.errorMessage.set(
+        'Organisation name must contain at least 2 characters',
+      );
+      return;
+    }
+
+    this.isSubmitting.set(true);
+    this.errorMessage.set('');
+
+    this.organisationService
+      .createOrganisation({ name: organisationName })
+      .subscribe({
+        next: (response) => {
+          this.organisations.update((organisations) => [response, ...organisations]);
+          this.isCreateModalOpen.set(false);
+          this.name = '';
+          this.successMessage.set(
+            `Organisation "${response.name}" created successfully`,
+          );
+          this.isSubmitting.set(false);
+        },
+        error: (error) => {
+          console.error('Failed to create organisation:', error);
+          this.errorMessage.set(
+            error.error?.message || 'Failed to create organisation',
+          );
+          this.isSubmitting.set(false);
+        },
+      });
   }
 }

@@ -5,6 +5,8 @@ import com.taskflow.exception.auth.InvalidCredentialsException;
 import com.taskflow.exception.auth.UserNotAuthenticatedException;
 import com.taskflow.exception.organisation.OrganisationAlreadyException;
 import com.taskflow.exception.organisation.OrganisationEmptyException;
+import com.taskflow.exception.organisation.OrganisationNotFoundException;
+import com.taskflow.exception.project.ProjectNameExistsException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -27,11 +29,24 @@ public class GlobalExceptionHandler {
     }
     @ExceptionHandler(OrganisationAlreadyException.class)
     public ResponseEntity<String> handleOrganisationAlreadyException(OrganisationAlreadyException organisationAlreadyException){
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(organisationAlreadyException.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(organisationAlreadyException.getMessage());
     }
 
     @ExceptionHandler(OrganisationEmptyException.class)
     public ResponseEntity<String> handleOrganisationEmptyException(OrganisationEmptyException organisationEmptyException){
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(organisationEmptyException.getMessage());
     }
+
+    @ExceptionHandler(OrganisationNotFoundException.class)
+    public ResponseEntity<String>handleOrganisationNotFoundException(OrganisationNotFoundException organisationNotFoundException){
+        return  ResponseEntity.status(HttpStatus.NOT_FOUND).body(organisationNotFoundException.getMessage());
+    }
+
+    @ExceptionHandler(ProjectNameExistsException.class)
+    public ResponseEntity<String>handleProjectNameExistsException(ProjectNameExistsException projectNameExistsException){
+        return  ResponseEntity.status(HttpStatus.CONFLICT).body(projectNameExistsException.getMessage());
+    }
+
 }
+
+

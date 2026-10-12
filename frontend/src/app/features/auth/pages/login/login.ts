@@ -42,7 +42,7 @@ export class Login {
     this.authService.login(this.loginForm.getRawValue()).subscribe({
       next: () => {
         this.loading = false;
-        void this.router.navigate(['/organisations/create']);
+        void this.router.navigate(['/dashboard']);
       },
       error: (error: HttpErrorResponse | Error) => {
         this.loading = false;

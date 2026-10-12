@@ -27,5 +27,5 @@ public class Organisation {
     private UUID ownerId;
 
     private LocalDateTime createdAt;
-    private LocalDateTime updatedBy;
+    private LocalDateTime updatedAt;
 }

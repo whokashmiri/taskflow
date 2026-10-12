@@ -34,4 +34,17 @@ export class OrganisationService{
         {headers}
       )
     }
+
+    getOrganisation(): Observable<OrganisationResponse[]>{
+      const token = this.authService.getToken();
+
+      const headers = token
+      ? new HttpHeaders({Authorization: `Bearer ${token}`})
+      : new HttpHeaders();
+
+      return this.http.get<OrganisationResponse[]>(
+        `${this.authUrl}/me`,
+        { headers }
+      );
+    }
 }

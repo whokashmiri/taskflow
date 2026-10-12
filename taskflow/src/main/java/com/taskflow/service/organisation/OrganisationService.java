@@ -5,6 +5,7 @@ import com.taskflow.dto.organisation.OrganisationResponse;
 import com.taskflow.exception.auth.UserNotAuthenticatedException;
 import com.taskflow.exception.organisation.OrganisationAlreadyException;
 import com.taskflow.exception.organisation.OrganisationEmptyException;
+import com.taskflow.exception.organisation.OrganisationNotFoundException;
 import com.taskflow.model.organisation.Organisation;
 import com.taskflow.model.user.User;
 import com.taskflow.repository.organisation.OrganisationRepository;
@@ -12,6 +13,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -48,5 +51,32 @@ public class OrganisationService {
         organisationResponse.setOwnerId(savedOrganisation.getOwnerId().toString());
 
         return organisationResponse;
+    }
+
+    public List<OrganisationResponse> getOrganisation(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof  String userId)){
+            throw new UserNotAuthenticatedException("User not authenticated");
+        }
+
+      UUID ownerId =  UUID.fromString(userId);
+        List<Organisation> organisationList = organisationRepository
+                .findAllByOwnerId(ownerId);
+
+        if (organisationList.isEmpty()){
+            throw new OrganisationNotFoundException("No organisation found");
+        }
+
+        return organisationList.stream()
+                        .map(organisation -> {
+                            OrganisationResponse organisationResponse = new OrganisationResponse();
+
+                            organisationResponse.setId(organisation.getId());
+                            organisationResponse.setName(organisation.getName());
+                            organisationResponse.setOwnerId(String.valueOf(organisation.getOwnerId()));
+                            organisationResponse.setCreatedAt(organisation.getCreatedAt());
+                            return organisationResponse;
+                        })
+                .toList();
     }
 }

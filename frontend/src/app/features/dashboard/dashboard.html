@@ -1,0 +1,227 @@
+
+<div class="min-h-screen bg-gray-50">
+  <!-- Header -->
+  <header class="border-b border-gray-200 bg-white">
+    <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">TaskFlow</h1>
+        <p class="text-sm text-gray-500">Your workspace</p>
+      </div>
+
+      <span class="rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">
+        Dashboard
+      </span>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-7xl px-6 py-10">
+    <!-- Page heading -->
+    <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <h2 class="text-3xl font-bold text-gray-900">
+          My Organisations
+        </h2>
+        <p class="mt-2 text-gray-600">
+          Manage your organisations and workspaces.
+        </p>
+      </div>
+
+      <button
+        type="button"
+        (click)="openCreateModal()"
+        class="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700">
+        <span class="text-xl">+</span>
+        Create Organisation
+      </button>
+    </div>
+
+    <!-- Success message -->
+    @if (successMessage()) {
+      <div
+        role="status"
+        class="mb-6 rounded-lg bg-green-50 p-4 text-sm text-green-700">
+        {{ successMessage() }}
+      </div>
+    }
+
+    <!-- Loading state -->
+    @if (isLoading()) {
+      <div class="rounded-xl border border-gray-200 bg-white p-8 text-center text-gray-600">
+        Loading your organisations...
+      </div>
+    } @else if (errorMessage() && !isCreateModalOpen()) {
+      <div
+        role="alert"
+        class="rounded-lg bg-red-50 p-4 text-sm text-red-700">
+        {{ errorMessage() }}
+
+        <button
+          type="button"
+          (click)="loadOrganisations()"
+          class="ml-2 font-semibold underline">
+          Try again
+        </button>
+      </div>
+    } @else if (organisations().length === 0) {
+      <!-- Empty state -->
+      <div class="rounded-2xl border border-dashed border-gray-300 bg-white px-6 py-16 text-center">
+        <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-blue-50">
+          <svg
+            class="h-7 w-7 text-blue-600"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4M9 9v.01M9 12v.01M9 15v.01M9 18v.01M15 12v.01M15 15v.01M15 18v.01" />
+          </svg>
+        </div>
+
+        <h3 class="text-xl font-semibold text-gray-900">
+          No organisations yet
+        </h3>
+
+        <p class="mx-auto mt-2 max-w-md text-sm text-gray-500">
+          Create your first organisation to start managing your projects and team.
+        </p>
+
+        <button
+          type="button"
+          (click)="openCreateModal()"
+          class="mt-6 rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700">
+          Create your first organisation
+        </button>
+      </div>
+    } @else {
+      <!-- Organisation cards -->
+      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        @for (organisation of organisations(); track organisation.id) {
+          <article class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+            <div class="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50">
+              <svg
+                class="h-6 w-6 text-blue-600"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4M9 9v.01M9 12v.01M9 15v.01M9 18v.01" />
+              </svg>
+            </div>
+
+            <h3 class="wrap-break-word text-xl font-semibold text-gray-900">
+              {{ organisation.name }}
+            </h3>
+
+            <p class="mt-3 break-all text-xs text-gray-400">
+              ID: {{ organisation.id }}
+            </p>
+
+            <p class="mt-3 text-sm text-gray-500">
+              Created:
+              {{ organisation.createdAt || 'Not available' }}
+            </p>
+          </article>
+        }
+      </div>
+    }
+  </main>
+</div>
+
+<!-- Create Organisation Modal -->
+@if (isCreateModalOpen()) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 px-4 py-8"
+    (click)="closeCreateModal()">
+
+    <section
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="create-organisation-title"
+      class="w-full max-w-lg rounded-2xl bg-white p-8 shadow-2xl"
+      (click)="$event.stopPropagation()">
+
+      <div class="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h2
+            id="create-organisation-title"
+            class="text-2xl font-bold text-gray-900">
+            Create Organisation
+          </h2>
+
+          <p class="mt-2 text-sm text-gray-600">
+            Create an organisation to get started with TaskFlow.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          (click)="closeCreateModal()"
+          [disabled]="isSubmitting()"
+          aria-label="Close modal"
+          class="rounded-lg px-3 py-1 text-2xl text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50">
+          &times;
+        </button>
+      </div>
+
+      <form (ngSubmit)="createOrganisation()" #organisationForm="ngForm">
+        <div class="mb-6">
+          <label
+            for="organisation-name"
+            class="mb-2 block text-sm font-medium text-gray-700">
+            Organisation Name
+          </label>
+
+          <input
+            id="organisation-name"
+            name="name"
+            type="text"
+            [(ngModel)]="name"
+            #organisationNameInput="ngModel"
+            required
+            minlength="2"
+            maxlength="100"
+            placeholder="Enter organisation name"
+            class="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+
+          @if (organisationNameInput.touched && organisationNameInput.invalid) {
+            <p class="mt-2 text-sm text-red-600">
+              Please enter an organisation name with at least 2 characters.
+            </p>
+          } @else if (name.trim().length === 1) {
+            <p class="mt-2 text-sm text-red-600">
+              Organisation name must contain at least 2 characters.
+            </p>
+          }
+        </div>
+
+        @if (errorMessage() && isCreateModalOpen()) {
+          <div
+            role="alert"
+            class="mb-5 rounded-lg bg-red-50 p-4 text-sm text-red-700">
+            {{ errorMessage() }}
+          </div>
+        }
+
+        <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            (click)="closeCreateModal()"
+            [disabled]="isSubmitting()"
+            class="rounded-lg border border-gray-300 px-5 py-3 font-semibold text-gray-700 transition hover:bg-gray-50 disabled:opacity-50">
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            [disabled]="isSubmitting() || !name.trim() || name.trim().length < 2"
+            class="rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
+            {{ isSubmitting() ? 'Creating...' : 'Create Organisation' }}
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
+}
