@@ -1,0 +1,614 @@
+
+<main class="min-h-screen bg-slate-950 text-slate-100">
+  <div class="mx-auto flex min-h-screen max-w-[1600px] flex-col lg:flex-row">
+    <aside class="border-b border-slate-800 bg-slate-900/70 p-4 sm:p-5 lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:shrink-0 lg:border-b-0 lg:border-r">
+      <div class="flex items-center gap-3">
+        <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500 font-bold text-slate-950">T</div>
+        <div>
+          <p class="text-sm font-bold tracking-wide text-slate-100">TASKFLOW</p>
+          <p class="text-xs text-slate-500">Project workspace</p>
+        </div>
+      </div>
+
+      <div class="mt-6 border-y border-slate-800 py-4 lg:mt-8">
+        <p class="mb-1 text-xs font-medium uppercase text-slate-500">Project</p>
+        <p class="wrap-break-word font-semibold text-slate-100">
+          {{ selectedProject?.name ?? 'Loading project...' }}
+        </p>
+      </div>
+
+      <button
+        type="button"
+        (click)="backToProjects()"
+        class="mt-4 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
+        <span aria-hidden="true" class="text-lg">←</span>
+        Back to projects
+      </button>
+
+      <nav aria-label="Project navigation" class="mt-5 lg:mt-8">
+        <p class="mb-2 px-3 text-xs font-medium uppercase text-slate-500">Workspace</p>
+        <button
+          type="button"
+          aria-current="page"
+          class="flex w-full items-center gap-3 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2.5 text-left text-sm font-semibold text-emerald-300">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
+          </svg>
+          Tasks
+        </button>
+        <button
+          type="button"
+          disabled
+          class="mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-slate-600 disabled:cursor-not-allowed">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10M7 12h6m-8 8 3.5-3H18a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3H6a3 3 0 0 0-3 3v14Z" />
+          </svg>
+          Chat
+        </button>
+        <button
+          type="button"
+          disabled
+          class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-slate-600 disabled:cursor-not-allowed">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="16" rx="2" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16 3v4M8 3v4M3 10h18M8 14h3m-3 3h6" />
+          </svg>
+          Meetings
+        </button>
+      </nav>
+    </aside>
+
+    <div class="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-10 lg:py-9">
+      <header class="mb-8 flex flex-col gap-5 border-b border-slate-800 pb-6 sm:flex-row sm:items-end sm:justify-between">
+        <div class="min-w-0">
+          <p class="mb-2 text-sm font-medium text-emerald-400">PROJECT</p>
+          <h1 class="wrap-break-word text-2xl font-bold sm:text-3xl">
+            {{ selectedProject?.name ?? 'Project workspace' }}
+          </h1>
+          <p class="mt-2 text-sm text-slate-400">Tasks</p>
+        </div>
+
+        <button
+          type="button"
+          (click)="openCreateModal()"
+          [disabled]="!selectedProjectId"
+          class="shrink-0 rounded-lg bg-emerald-500 px-4 py-2.5 font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50">
+          <span class="mr-2">+</span>
+          New task
+        </button>
+      </header>
+
+    @if (successMessage) {
+      <div
+        role="status"
+        class="mb-5 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-300">
+        {{ successMessage }}
+      </div>
+    }
+
+    @if (errorMessage) {
+      <div
+        role="alert"
+        class="mb-5 flex flex-col gap-3 rounded-xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-300 sm:flex-row sm:items-center sm:justify-between">
+        <span>{{ errorMessage }}</span>
+        <button
+          type="button"
+          (click)="loadTasks()"
+          class="self-start font-semibold underline sm:self-auto">
+          Retry
+        </button>
+      </div>
+    }
+
+    <section class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <h2 class="text-lg font-semibold">Task list</h2>
+        <p class="mt-1 text-sm text-slate-400">
+          @if (loadingTasks) {
+            Loading tasks...
+          } @else {
+            {{ tasks.length }} {{ tasks.length === 1 ? 'task' : 'tasks' }}
+          }
+        </p>
+      </div>
+
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <div>
+        <label
+          for="statusFilter"
+          class="mb-2 block text-sm font-medium text-slate-300">
+          Filter by status
+        </label>
+
+        <select
+          id="statusFilter"
+          name="statusFilter"
+          [(ngModel)]="selectedStatus"
+          (ngModelChange)="onStatusChange()"
+          class="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-100 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20">
+
+          <option value="">All statuses</option>
+
+          @for (status of taskStatuses; track status) {
+            <option [value]="status">
+              {{ formatStatus(status) }}
+            </option>
+          }
+        </select>
+        </div>
+
+        <button
+          type="button"
+          (click)="loadTasks()"
+          [disabled]="loadingTasks"
+          class="rounded-lg border border-slate-700 px-3 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-slate-800 disabled:opacity-50">
+          Refresh
+        </button>
+      </div>
+    </section>
+
+    <!-- Project loading -->
+    @if (loadingProjects) {
+      <section class="rounded-2xl border border-slate-800 bg-slate-900 p-12 text-center">
+        <p class="text-slate-400">Loading projects...</p>
+      </section>
+    } @else if (projects.length === 0) {
+      <section class="rounded-2xl border border-dashed border-slate-700 bg-slate-900/50 px-6 py-16 text-center">
+        <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-800 text-2xl">
+          ◫
+        </div>
+        <h2 class="text-xl font-semibold">No projects available</h2>
+        <p class="mx-auto mt-2 max-w-md text-sm text-slate-400">
+          Create a project first, then come back here to manage its tasks.
+        </p>
+      </section>
+    } @else {
+      <!-- Task list -->
+      <section class="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
+        @if (loadingTasks) {
+          <div class="space-y-3 p-5 sm:p-6">
+            @for (item of [1, 2, 3]; track item) {
+              <div class="animate-pulse rounded-xl border border-slate-800 p-5">
+                <div class="mb-3 h-4 w-1/3 rounded bg-slate-800"></div>
+                <div class="h-3 w-2/3 rounded bg-slate-800"></div>
+              </div>
+            }
+          </div>
+        } @else if (tasks.length === 0) {
+          <div class="px-6 py-16 text-center">
+            <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-800 text-2xl text-emerald-400">
+              ✓
+            </div>
+            <h3 class="text-lg font-semibold">Nothing here yet</h3>
+            <p class="mt-2 text-sm text-slate-400">
+              Create a task to get this project moving.
+            </p>
+            <button
+              type="button"
+              (click)="openCreateModal()"
+              class="mt-5 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 hover:bg-emerald-400">
+              Create your first task
+            </button>
+          </div>
+        } @else {
+          <div class="divide-y divide-slate-800">
+            @for (row of visibleTasks; track row.task.id) {
+              @let task = row.task;
+              <article
+                class="border-l-2 border-transparent p-5 transition hover:bg-slate-800/30 sm:pr-6"
+                [class.border-emerald-500/40]="row.depth > 0"
+                [style.padding-left.rem]="1.25 + row.depth * 1.25">
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+
+                  <div class="min-w-0 flex-1">
+                    <div class="mb-2 flex flex-wrap items-center gap-2">
+                      <span class="font-mono text-xs text-emerald-400">
+                        {{ task.taskKey }}
+                      </span>
+
+                      <span
+                        class="rounded-full px-2.5 py-1 text-xs font-medium"
+                        [ngClass]="statusClasses(task.status)">
+                        {{ formatStatus(task.status) }}
+                      </span>
+
+                      <span
+                        class="text-xs font-semibold"
+                        [ngClass]="priorityClasses(task.priority)">
+                        {{ formatPriority(task.priority) }} priority
+                      </span>
+
+                      @if (task.parentTaskId) {
+                        <span class="rounded bg-slate-800 px-2 py-1 text-xs font-medium text-slate-300">
+                          Subtask
+                        </span>
+                        @if (row.parent) {
+                          <span class="text-xs text-slate-500">
+                            Child of {{ row.parent.taskKey }} · {{ row.parent.name }}
+                          </span>
+                        }
+                      }
+                    </div>
+
+                    <button
+                      type="button"
+                      (click)="openTaskDetails(task)"
+                      class="wrap-break-word text-left text-lg font-semibold text-slate-100 transition hover:text-emerald-400">
+                      {{ task.name }}
+                    </button>
+
+                    @if (task.description) {
+                      <p class="mt-2 line-clamp-2 whitespace-pre-wrap wrap-break-word text-sm text-slate-400">
+                        {{ task.description }}
+                      </p>
+                    }
+
+                    <div class="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-500">
+                      <span>Type: {{ task.type }}</span>
+
+                      @if (task.dueDate) {
+                        <span>
+                          Due: {{ task.dueDate | date:'mediumDate' }}
+                        </span>
+                      }
+
+                      @if (task.estimatedMinutes !== null) {
+                        <span>
+                          Estimate: {{ task.estimatedMinutes }} min
+                        </span>
+                      }
+
+                      <span>
+                        {{ task.subtaskCount }} subtasks
+                      </span>
+                    </div>
+
+                    <div class="mt-4 max-w-sm">
+                      <div class="mb-1.5 flex justify-between text-xs">
+                        <span class="text-slate-500">Progress</span>
+                        <span class="text-slate-300">
+                          {{ task.progressPercentage ?? 0 }}%
+                        </span>
+                      </div>
+                      <div class="h-1.5 overflow-hidden rounded-full bg-slate-800">
+                        <div
+                          class="h-full rounded-full bg-emerald-500 transition-all"
+                          [style.width.%]="task.progressPercentage ?? 0">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="flex shrink-0 flex-wrap gap-2 lg:justify-end">
+                    <button
+                      type="button"
+                      (click)="openTaskDetails(task)"
+                      class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800">
+                      Details
+                    </button>
+
+                    <button
+                      type="button"
+                      (click)="openCreateModal(task)"
+                      class="rounded-lg border border-emerald-500/30 px-3 py-2 text-sm font-medium text-emerald-400 hover:bg-emerald-500/10">
+                      + Subtask
+                    </button>
+
+                    <button
+                      type="button"
+                      (click)="archiveTask(task)"
+                      class="rounded-lg border border-rose-500/20 px-3 py-2 text-sm font-medium text-rose-300 hover:bg-rose-500/10">
+                      Archive
+                    </button>
+                  </div>
+                </div>
+              </article>
+            }
+          </div>
+        }
+      </section>
+
+      <!-- Task details and subtasks -->
+      @if (selectedTask; as task) {
+        <section class="mt-6 rounded-2xl border border-slate-800 bg-slate-900 p-5 sm:p-6">
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div class="min-w-0">
+              <p class="font-mono text-xs text-emerald-400">
+                {{ task.taskKey }}
+              </p>
+              <h2 class="mt-2 wrap-break-word text-2xl font-bold">
+                {{ task.name }}
+              </h2>
+              <p class="mt-2 text-sm text-slate-400">
+                {{ task.description || 'No description provided.' }}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              (click)="closeTaskDetails()"
+              class="self-start rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 hover:bg-slate-800">
+              Close details
+            </button>
+          </div>
+
+          <div class="mt-6 flex flex-wrap gap-3 text-sm">
+            <span class="rounded-lg bg-slate-800 px-3 py-2 text-slate-300">
+              Status: {{ formatStatus(task.status) }}
+            </span>
+            <span class="rounded-lg bg-slate-800 px-3 py-2 text-slate-300">
+              Priority: {{ formatPriority(task.priority) }}
+            </span>
+            <span class="rounded-lg bg-slate-800 px-3 py-2 text-slate-300">
+              Version: {{ task.version ?? '—' }}
+            </span>
+          </div>
+
+          <div class="mt-8 flex items-center justify-between gap-3">
+            <h3 class="text-lg font-semibold">Subtasks</h3>
+            <button
+              type="button"
+              (click)="openCreateModal(task)"
+              class="rounded-lg bg-emerald-500 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-400">
+              + Add subtask
+            </button>
+          </div>
+
+          @if (loadingSubtasks) {
+            <p class="mt-4 text-sm text-slate-400">Loading subtasks...</p>
+          } @else if (subtasks.length === 0) {
+            <p class="mt-4 rounded-xl border border-dashed border-slate-700 p-5 text-sm text-slate-400">
+              No subtasks yet. Break this task into smaller steps.
+            </p>
+          } @else {
+            <div class="mt-4 divide-y divide-slate-800 rounded-xl border border-slate-800">
+              @for (subtask of subtasks; track subtask.id) {
+                <div class="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p class="font-mono text-xs text-emerald-400">
+                      {{ subtask.taskKey }}
+                    </p>
+                    <p class="mt-1 font-medium">{{ subtask.name }}</p>
+                    <p class="mt-1 text-xs text-slate-400">
+                      {{ formatStatus(subtask.status) }}
+                      ·
+                      {{ formatPriority(subtask.priority) }} priority
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    (click)="openTaskDetails(subtask)"
+                    class="self-start rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 hover:bg-slate-800 sm:self-auto">
+                    View subtasks
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </section>
+      }
+    }
+  </div>
+  </div>
+</main>
+
+<!-- Create task / subtask modal -->
+@if (showCreateModal) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm"
+    (click)="closeCreateModal()">
+
+    <section
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="create-task-title"
+      class="my-auto w-full max-w-2xl rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl sm:p-8"
+      (click)="$event.stopPropagation()">
+
+      <div class="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <p class="text-sm font-medium text-emerald-400">
+            {{ parentTaskId ? 'TASK HIERARCHY' : 'PROJECT WORK' }}
+          </p>
+          <h2 id="create-task-title" class="mt-1 text-2xl font-bold">
+            {{ parentTaskId ? 'Create subtask' : 'Create task' }}
+          </h2>
+          <p class="mt-2 text-sm text-slate-400">
+            {{
+              parentTaskId
+                ? 'Add a smaller task under the selected parent task.'
+                : 'Add a new task to the selected project.'
+            }}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          (click)="closeCreateModal()"
+          [disabled]="submitting"
+          aria-label="Close dialog"
+          class="text-2xl text-slate-500 hover:text-white disabled:opacity-50">
+          &times;
+        </button>
+      </div>
+
+      @if (errorMessage) {
+        <div role="alert" class="mb-5 rounded-xl bg-rose-500/10 p-3 text-sm text-rose-300">
+          {{ errorMessage }}
+        </div>
+      }
+
+      <form #taskForm="ngForm" (ngSubmit)="createTask()" class="space-y-5">
+
+        <div>
+          <label for="taskName" class="mb-2 block text-sm font-medium text-slate-300">
+            Task name <span class="text-rose-400">*</span>
+          </label>
+          <input
+            id="taskName"
+            name="taskName"
+            [(ngModel)]="taskName"
+            #taskNameField="ngModel"
+            required
+            maxlength="255"
+            placeholder="e.g. Design database schema"
+            class="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none placeholder:text-slate-600 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" />
+
+          @if (taskNameField.invalid && taskNameField.touched) {
+            <p class="mt-1 text-xs text-rose-300">
+              A task name is required and must not exceed 255 characters.
+            </p>
+          }
+        </div>
+
+        <div>
+          <label for="taskDescription" class="mb-2 block text-sm font-medium text-slate-300">
+            Description
+          </label>
+          <textarea
+            id="taskDescription"
+            name="taskDescription"
+            [(ngModel)]="taskDescription"
+            maxlength="10000"
+            rows="3"
+            placeholder="Describe what needs to be done..."
+            class="w-full resize-y rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none placeholder:text-slate-600 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20">
+          </textarea>
+          <p class="mt-1 text-right text-xs text-slate-500">
+            {{ taskDescription.length }}/10000
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label for="taskType" class="mb-2 block text-sm font-medium text-slate-300">
+              Type
+            </label>
+            <select
+              id="taskType"
+              name="taskType"
+              [(ngModel)]="taskType"
+              class="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none focus:border-emerald-500">
+              @for (type of taskTypes; track type) {
+                <option [value]="type">{{ type }}</option>
+              }
+            </select>
+          </div>
+
+          <div>
+            <label for="taskPriority" class="mb-2 block text-sm font-medium text-slate-300">
+              Priority
+            </label>
+            <select
+              id="taskPriority"
+              name="taskPriority"
+              [(ngModel)]="taskPriority"
+              class="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none focus:border-emerald-500">
+              @for (priority of taskPriorities; track priority) {
+                <option [value]="priority">{{ priority }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label for="startDate" class="mb-2 block text-sm font-medium text-slate-300">
+              Start date
+            </label>
+            <input
+              id="startDate"
+              name="startDate"
+              type="datetime-local"
+              [(ngModel)]="startDate"
+              class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-sm text-slate-100 outline-none focus:border-emerald-500" />
+          </div>
+
+          <div>
+            <label for="dueDate" class="mb-2 block text-sm font-medium text-slate-300">
+              Due date
+            </label>
+            <input
+              id="dueDate"
+              name="dueDate"
+              type="datetime-local"
+              [(ngModel)]="dueDate"
+              [min]="startDate || null"
+              class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-sm text-slate-100 outline-none focus:border-emerald-500" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label for="estimatedMinutes" class="mb-2 block text-sm font-medium text-slate-300">
+              Estimate (minutes)
+            </label>
+            <input
+              id="estimatedMinutes"
+              name="estimatedMinutes"
+              type="number"
+              min="1"
+              step="1"
+              [(ngModel)]="estimatedMinutes"
+              #estimateField="ngModel"
+              placeholder="e.g. 60"
+              class="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none focus:border-emerald-500" />
+
+            @if (estimateField.invalid && estimateField.touched) {
+              <p class="mt-1 text-xs text-rose-300">
+                Estimate must be a positive number.
+              </p>
+            }
+          </div>
+
+          <div>
+            <label for="progressPercentage" class="mb-2 block text-sm font-medium text-slate-300">
+              Progress (%)
+            </label>
+            <input
+              id="progressPercentage"
+              name="progressPercentage"
+              type="number"
+              min="0"
+              max="100"
+              step="1"
+              required
+              [(ngModel)]="progressPercentage"
+              #progressField="ngModel"
+              class="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none focus:border-emerald-500" />
+
+            @if (progressField.invalid && progressField.touched) {
+              <p class="mt-1 text-xs text-rose-300">
+                Progress must be between 0 and 100.
+              </p>
+            }
+          </div>
+        </div>
+
+        <div class="flex flex-col-reverse gap-3 border-t border-slate-800 pt-5 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            (click)="closeCreateModal()"
+            [disabled]="submitting"
+            class="rounded-xl border border-slate-700 px-5 py-3 font-medium text-slate-300 hover:bg-slate-800 disabled:opacity-50">
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            [disabled]="submitting || taskForm.invalid || !taskName.trim()"
+            class="rounded-xl bg-emerald-500 px-5 py-3 font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50">
+            {{
+              submitting
+                ? 'Saving...'
+                : parentTaskId
+                  ? 'Create subtask'
+                  : 'Create task'
+            }}
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
+}
