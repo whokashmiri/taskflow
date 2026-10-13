@@ -29,6 +29,21 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'tasks',
+    loadComponent: () =>
+      import('./features/task/pages/task').then(
+        (m) => m.Tasks,
+      ),
+  },
+  
+{
+  path: 'projects/:projectId/tasks',
+  loadComponent: () =>
+    import('./features/task/pages/task')
+      .then(m => m.Tasks),
+},
+
+  {
     path: '**',
     redirectTo: 'login',
   },

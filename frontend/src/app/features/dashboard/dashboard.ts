@@ -2,6 +2,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { OrganisationService } from '../../core/services/organisation.service';
 import { ProjectService } from '../../core/services/project.service';
@@ -18,6 +19,8 @@ import { ProjectResponse } from '../project/models/project.model';
 export class Dashboard implements OnInit {
   private readonly organisationService = inject(OrganisationService);
   private readonly projectService = inject(ProjectService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   organisations = signal<OrganisationResponse[]>([]);
   projects = signal<ProjectResponse[]>([]);
@@ -52,6 +55,13 @@ export class Dashboard implements OnInit {
       next: (response) => {
         this.organisations.set(response);
         this.isLoading.set(false);
+
+        const organisationId = this.route.snapshot.queryParamMap.get('organisationId');
+        const organisation = response.find((item) => item.id === organisationId);
+
+        if (organisation) {
+          this.selectOrganisation(organisation);
+        }
       },
       error: (error) => {
         console.error('Failed to load organisations:', error);
@@ -96,6 +106,10 @@ selectOrganisation(organisation: OrganisationResponse): void {
         }
       },
     });
+}
+
+openProject(project: ProjectResponse): void {
+  void this.router.navigate(['/projects', project.id, 'tasks']);
 }
 
 
